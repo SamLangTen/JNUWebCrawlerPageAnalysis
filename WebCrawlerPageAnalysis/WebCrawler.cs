@@ -14,6 +14,7 @@ namespace WebCrawlerPageAnalysis
     class WebCrawler
     {
         private int visitPageCount { get; set; }
+        private int count { get; set; }
         private bool isRunning { get; set; } = false;
         private Uri firstPage { get; set; }
         private bool sameHost { get; set; } = true;
@@ -47,6 +48,8 @@ namespace WebCrawlerPageAnalysis
             //检查页面个数是否已经到达
             if (availablePages.Count >= visitPageCount || isRunning == false)
                 return;
+            count++;
+            var nowCount = count;
             //开始访问
             var regex = new Regex(@"(?<=href\=\"")[^\""]*(?=\"")");
             var content = downloadPage(pageLink);
@@ -76,9 +79,9 @@ namespace WebCrawlerPageAnalysis
             };
             availablePages.Add(pi);
             //触发新页面获取事件
-            this.NewPageGet?.Invoke(this, new PageGetEventArgs() { PageInfo = pi });
+            this.NewPageGet?.Invoke(this, new PageGetEventArgs() { PageInfo = pi, Count = nowCount });
             //检查是否已经访问，没有就递归访问。
-            availableURI.ToList().ForEach(u =>
+            availableURI.ToList().ForEach(async u =>
             {
                 if (availablePages.FirstOrDefault(a => a.PageLink.GetLeftPart(UriPartial.Path).ToLower() == u.GetLeftPart(UriPartial.Path).ToLower()) == null)
                 {
@@ -89,9 +92,10 @@ namespace WebCrawlerPageAnalysis
 
         public event EventHandler<PageGetEventArgs> NewPageGet;
 
-        public IList<PageInfo> GetPagesAsync()
+        public IList<PageInfo> GetPages()
         {
             isRunning = true;
+            this.count = 0;
             this.availablePages.Clear();
             recursePage(firstPage);
             return this.availablePages;

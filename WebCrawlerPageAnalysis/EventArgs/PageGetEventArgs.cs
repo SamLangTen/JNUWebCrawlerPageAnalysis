@@ -9,5 +9,6 @@ namespace WebCrawlerPageAnalysis.EventArgs
     class PageGetEventArgs : System.EventArgs
     {
         public PageInfo PageInfo { get; set; }
+        public int Count { get; set; }
     }
 }

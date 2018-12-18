@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -16,16 +17,16 @@ namespace WebCrawlerPageAnalysis
             Console.Write("Visit Count:");
             var count = int.Parse(Console.ReadLine());
             //Do
+            ServicePointManager.DefaultConnectionLimit = 1024;
             var wb = new WebCrawler(link, count, true);
-
             wb.NewPageGet += Wb_NewPageGet;
             GetResult(wb);
             Console.ReadLine();
         }
-        
+
         private static void GetResult(WebCrawler wb)
         {
-            var result = wb.GetPagesAsync();
+            var result = wb.GetPages();
             Console.WriteLine("Total Pages:{0}", result.Count());
             Console.Write("Output Filename:");
             var filename = Console.ReadLine();
@@ -35,7 +36,7 @@ namespace WebCrawlerPageAnalysis
 
         private static void Wb_NewPageGet(object sender, EventArgs.PageGetEventArgs e)
         {
-            Console.WriteLine("Get:{0}\tLink:{1}", e.PageInfo.PageLink.GetLeftPart(UriPartial.Path), e.PageInfo.PageToOtherLinks.Count());
+            Console.WriteLine("Get:{0}\t\tLink:{1}\t{2}", e.PageInfo.PageLink.GetLeftPart(UriPartial.Path), e.PageInfo.PageToOtherLinks.Count(), e.Count);
         }
     }
 }
