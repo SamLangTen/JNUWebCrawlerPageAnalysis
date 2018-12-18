@@ -49,8 +49,6 @@ namespace WebCrawlerPageAnalysis
                 return;
             //开始访问
             var regex = new Regex(@"(?<=href\=\"")[^\""]*(?=\"")");
-
-            Console.WriteLine("DO");
             var content = downloadPage(pageLink);
             //排除CSS、JS脚本
             var matchURL = regex.Matches(content).Cast<Match>().Select(a => a.Value);

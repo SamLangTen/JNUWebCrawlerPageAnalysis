@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-
+using Newtonsoft.Json;
 namespace WebCrawlerPageAnalysis
 {
     class Program
@@ -21,11 +22,15 @@ namespace WebCrawlerPageAnalysis
             GetResult(wb);
             Console.ReadLine();
         }
-
+        
         private static void GetResult(WebCrawler wb)
         {
             var result = wb.GetPagesAsync();
             Console.WriteLine("Total Pages:{0}", result.Count());
+            Console.Write("Output Filename:");
+            var filename = Console.ReadLine();
+            var outputText = new PageLinkSerializer(result).GetSerializedText();
+            File.WriteAllText(filename, outputText);
         }
 
         private static void Wb_NewPageGet(object sender, EventArgs.PageGetEventArgs e)
