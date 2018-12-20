@@ -20,18 +20,13 @@ namespace WebCrawlerPageAnalysis
             ServicePointManager.DefaultConnectionLimit = 1024;
             var wb = new WebCrawler(link, count, true);
             wb.NewPageGet += Wb_NewPageGet;
-            GetResult(wb);
-            Console.ReadLine();
-        }
-
-        private static void GetResult(WebCrawler wb)
-        {
             var result = wb.GetPages();
             Console.WriteLine("Total Pages:{0}", result.Count());
             Console.Write("Output Filename:");
             var filename = Console.ReadLine();
             var outputText = new PageLinkSerializer(result).GetSerializedText();
             File.WriteAllText(filename, outputText);
+            Console.ReadLine();
         }
 
         private static void Wb_NewPageGet(object sender, EventArgs.PageGetEventArgs e)

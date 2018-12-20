@@ -81,7 +81,7 @@ namespace WebCrawlerPageAnalysis
             //触发新页面获取事件
             this.NewPageGet?.Invoke(this, new PageGetEventArgs() { PageInfo = pi, Count = nowCount });
             //检查是否已经访问，没有就递归访问。
-            availableURI.ToList().ForEach(async u =>
+            availableURI.ToList().ForEach(u =>
             {
                 if (availablePages.FirstOrDefault(a => a.PageLink.GetLeftPart(UriPartial.Path).ToLower() == u.GetLeftPart(UriPartial.Path).ToLower()) == null)
                 {
