@@ -20,18 +20,21 @@ namespace WebCrawlerPageAnalysis
         private bool sameHost { get; set; } = true;
         private IList<PageInfo> availablePages { get; set; } = new List<PageInfo>();
 
-        private string downloadPage(Uri link)
+        private string downloadPage(Uri link,out bool isHTML)
         {
             var http = (HttpWebRequest)HttpWebRequest.Create(link);
             http.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36";
             http.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8";
             http.AutomaticDecompression = DecompressionMethods.GZip;
+            http.Timeout = 10000;
             http.Method = "GET";
             WebResponse response;
             string text = "";
+            isHTML = false;
             try
             {
                 response = http.GetResponse();
+                isHTML = response.ContentType.ToLower().Contains("text/html");
                 text = new StreamReader(response.GetResponseStream()).ReadToEnd();
                 http.Abort();
             }
@@ -48,11 +51,14 @@ namespace WebCrawlerPageAnalysis
             //检查页面个数是否已经到达
             if (availablePages.Count >= visitPageCount || isRunning == false)
                 return;
-            count++;
-            var nowCount = count;
+            
             //开始访问
+            var isHtml = false;
+            var content = downloadPage(pageLink, out isHtml);
+            if (!isHtml) return;
+            var nowCount = count;
+            count++;
             var regex = new Regex(@"(?<=href\=\"")[^\""]*(?=\"")");
-            var content = downloadPage(pageLink);
             //排除CSS、JS脚本
             var matchURL = regex.Matches(content).Cast<Match>().Select(a => a.Value);
             //排除空URL
@@ -69,8 +75,11 @@ namespace WebCrawlerPageAnalysis
             //剔除非https和http的地址
             availableURI = availableURI.Where(u => u.Scheme == Uri.UriSchemeHttp || u.Scheme == Uri.UriSchemeHttps);
             //按设定选择剔除与根网站相同域名的页面
-            var authority = firstPage.GetLeftPart(UriPartial.Authority).ToLower();
-            availableURI = availableURI.Where(u => u.GetLeftPart(UriPartial.Authority).ToLower() == authority);
+            if(sameHost)
+            {
+                var authority = firstPage.GetLeftPart(UriPartial.Authority).ToLower();
+                availableURI = availableURI.Where(u => u.GetLeftPart(UriPartial.Authority).ToLower() == authority);
+            }
             //将本页添加到访问集合中
             var pi = new PageInfo()
             {

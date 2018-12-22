@@ -16,9 +16,11 @@ namespace WebCrawlerPageAnalysis
             var link = Console.ReadLine();
             Console.Write("Visit Count:");
             var count = int.Parse(Console.ReadLine());
+            Console.Write("Only Search Same Origin?(Y/n):");
+            var isSameOrigin = Console.ReadLine() == "n" ? false : true;
             //Do
             ServicePointManager.DefaultConnectionLimit = 1024;
-            var wb = new WebCrawler(link, count, true);
+            var wb = new WebCrawler(link, count, isSameOrigin);
             wb.NewPageGet += Wb_NewPageGet;
             var result = wb.GetPages();
             Console.WriteLine("Total Pages:{0}", result.Count());
