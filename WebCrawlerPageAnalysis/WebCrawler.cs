@@ -48,48 +48,45 @@ namespace WebCrawlerPageAnalysis
 
         private void recursePage(Uri pageLink)
         {
-            //检查页面个数是否已经到达
+            //Check if reach max count
             if (availablePages.Count >= visitPageCount || isRunning == false)
                 return;
             
-            //开始访问
+            //Start to visit
             var isHtml = false;
             var content = downloadPage(pageLink, out isHtml);
             if (!isHtml) return;
             var nowCount = count;
             count++;
             var regex = new Regex(@"(?<=href\=\"")[^\""]*(?=\"")");
-            //排除CSS、JS脚本
             var matchURL = regex.Matches(content).Cast<Match>().Select(a => a.Value);
-            //排除空URL
+            //Exclude empty url
             matchURL = matchURL.Where(a => a.Trim() != "");
-            //排除JS脚本
-            //matchURL = matchURL.Where(a => Uri.IsWellFormedUriString(a, UriKind.RelativeOrAbsolute));
+            //Exclude JavaScript
             matchURL = matchURL.Where(a => !a.Contains("javascript"));
-            //转换为URI，链接相对地址
+            //Convert to Uri type and concatenate relative url
             var baseUri = new Uri(pageLink.GetLeftPart(UriPartial.Authority));
             var availableURI = matchURL.Select(a => new Uri(baseUri, a));
-            //排除CSS、JS
+            //exclude file
             var invalidExtensions = new string[] { ".css", ".js", ".png", ".jpg", ".ico", ".svg", ".gif" };
             availableURI = availableURI.Where(u => !invalidExtensions.Contains(Path.GetExtension(u.GetLeftPart(UriPartial.Path)).ToLower()));
-            //剔除非https和http的地址
+            //exclude none http and https protocol
             availableURI = availableURI.Where(u => u.Scheme == Uri.UriSchemeHttp || u.Scheme == Uri.UriSchemeHttps);
-            //按设定选择剔除与根网站相同域名的页面
+            //exclude weblink not in same host according to settings
             if(sameHost)
             {
                 var authority = firstPage.GetLeftPart(UriPartial.Authority).ToLower();
                 availableURI = availableURI.Where(u => u.GetLeftPart(UriPartial.Authority).ToLower() == authority);
             }
-            //将本页添加到访问集合中
+            //add this pages to visited list
             var pi = new PageInfo()
             {
                 PageToOtherLinks = availableURI,
                 PageLink = pageLink
             };
             availablePages.Add(pi);
-            //触发新页面获取事件
             this.NewPageGet?.Invoke(this, new PageGetEventArgs() { PageInfo = pi, Count = nowCount });
-            //检查是否已经访问，没有就递归访问。
+            //Check if has been visited
             availableURI.ToList().ForEach(u =>
             {
                 if (availablePages.FirstOrDefault(a => a.PageLink.GetLeftPart(UriPartial.Path).ToLower() == u.GetLeftPart(UriPartial.Path).ToLower()) == null)
